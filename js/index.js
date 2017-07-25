@@ -1,7 +1,14 @@
     if (localStorage.wallets == undefined || localStorage.wallets == "[]" || localStorage.wallets == "") {
         localStorage.setItem("wallets", "[]");
     }
-
+    /**
+     * 
+     * @param {*钱包名称} name 
+     * @param {*地址} address 
+     * @param {*余额} allassets 
+     * @param {*签名数据} ciphertext 
+     * @param {*是否有私钥} ifPrivate 
+     */
     function createShowObj(name, address, allassets, ciphertext, ifPrivate) {
 
         let obj = {
@@ -15,12 +22,19 @@
         return obj;
     }
 
+    /**
+     * 钱包工具类
+     */
     class WalletList {
         constructor() {
             this.address = "";
             this.currency = "";
             this.number = 0;
         }
+        /**
+         * 添加钱包
+         * @param {*钱包对象} walletObj 
+         */
         addWallet(walletObj) {
             let wallets = localStorage.wallets;
             // this.address = address;
@@ -39,6 +53,10 @@
                 return true;
             }
         }
+        /**
+         * 删除钱包
+         * @param {*钱包数组下标} index 
+         */
         deleteWallet(index) {
             let wallets = Array();
             wallets = JSON.parse(localStorage.wallets);
@@ -46,6 +64,10 @@
             localStorage.wallets = JSON.stringify(wallets);
             return true;
         }
+        /**
+         * 获得未使用资产
+         * @param {*地址} address 
+         */
         getUnspent(address) {
             let unspent = new Array();
             $.ajax({
@@ -65,6 +87,9 @@
             });
             return unspent;
         }
+        /**
+         * 获得钱包
+         */
         getWallets() {
             let wallets = localStorage.wallets;
             let showWallets = new Array();
@@ -89,7 +114,9 @@
     let walletUtil = new Wallet();
     // VerifyAddress
     let walletList = new WalletList();
-
+    /**
+     * vue模型层
+     */
     var vm = new Vue({
         el: '#app',
         data: {
@@ -139,7 +166,7 @@
                 var index = $index;
                 this.showAddress = index;
             },
-            //新建
+            //新建增钱包
             createWallet: function() {
                 // this.wallets.push(this.newWallet);
                 // alert(this.newWallet.address);
@@ -151,7 +178,9 @@
                     ciphertext: '',
                     ifPrivate: false
                 }
-
+                /**
+                 * 判断是否有密码，如果有则是wif,没有则是Address
+                 */
                 if (this.newWallet.password != "" && this.newWallet.password != undefined) {
                     let privateKey = Wallet.getPrivateKeyFromWIF(this.newWallet.address);
                     let password = this.newWallet.password;
