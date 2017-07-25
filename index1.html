@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SB Admin 2</title>
+    <script language="javascript">
+    </script>
+
+    <script>
+        $(function() {
+            var css = {
+                webkitTransition: 'opacity 1.5s ease,-webkit-transform 1.5s ease',
+                opacity: '0'
+            };
+            $('#logo').modal('show');
+            $('.logo').animate(css, 2500, closeImg());
+
+            function closeImg() {
+                window.location.href = "./app.html";
+            }
+
+            function rowBack() {
+                if (css.opacity === '0')
+                    css.opacity = '1';
+                else if (css.opacity === '1')
+                    css.opacity = '0';
+                $('.logo').animate(css, 1500, rowBack);
+            }
+
+        })
+    </script>
+    <style>
+        .logo {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <img class="logo" src="img/LOGO.png">
+
+    <p id="demoP">这项研究关注的是持续的社会经济调查与智商的遗传关系。年龄在2岁和16岁之间的孩子被评估了九次，并通过混合家长管理、网站和电话为基础进行测试。发表在情报杂志中的结果显示，有着富裕家庭背景的两岁儿童有更多的机会在智商测试上获得更高的分数，而且随着时间的推移和经验的丰富会获得更高的收入。伦敦大学金史密斯学院的索菲·冯·斯塔姆医生接了这项研究说：“我们在这段时间已经知道，那些处于低社会经济地位（SES）的儿童的智力测试平均比高社会经济地位的儿童糟糕，但智力与SES的发展关系并不是如前所述。我们的调查在建立着关系，强调了SES和IQ之间的联系。我们希望我们的发现将会推动未来研究的具体机制和因素。”</p>
+    <button id="demoBtn">显示所有</button>
+<script>
+    var oP = document.getElementById('demoP');
+    var oBtn = document.getElementById('demoBtn');
+    var allContent = oP.innerHTML;                   //存放所有内容
+    oP.innerHTML = oP.innerHTML.substr(0,100);        //截取前100个字符
+    oBtn.onclick=function(){
+        oP.innerHTML = allContent;                    //显示所有内容
+    }
+</script>
+</body>
+
+</html>
