@@ -140,6 +140,7 @@
             alertMessage: "",
             businessMessage: {
                 toAddress: '',
+                address:'',
                 amount: 0,
                 publickeyEncoded: '',
                 privatekey: '',
@@ -264,12 +265,18 @@
                     $('#loginWallet').modal('hide');
                     this.alertMessage = "登录成功，开始交易吧";
                     $('#businessAlert').modal('show');
-
+                }
+                
+                this.loginData= {
+                    walletIndex: index,
+                    ciphertext: '',
+                    password: ''
                 }
             },
             //交易
             business: function() {
                 this.businessMessage.account = this.wallets[this.loginData.walletIndex].allassets[0];
+                this.businessMessage.address = this.wallets[this.loginData.walletIndex].address;
                 console.log(this.businessMessage);
                 $('#businessOpen').modal('hide');
                 $('#loginWallet').modal('show');
@@ -285,6 +292,13 @@
                 $('#businessAlert').modal('hide');
                 $('#loader').modal('show');
                 this.sendTransactionData(txRawData);
+                this.businessMessage= {
+                    toAddress: '',
+                    amount: 0,
+                    publickeyEncoded: '',
+                    privatekey: '',
+                    account: {}
+                }
             },
             /**
              * 广播签名
