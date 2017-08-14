@@ -19952,44 +19952,6 @@ var vm = new Vue({
     }
 });
 
-// 或缺的传输数据
-// function getTransferTxData($txData) {
-//     var ba = new Buffer($txData, "hex");
-//     var tx = new Transaction();
-
-//     // Transfer Type
-//     if (ba[0] != 0x80) return;
-//     tx.type = ba[0];
-
-//     // Version
-//     tx.version = ba[1];
-
-//     // Attributes
-//     var k = 2;
-//     var len = ba[k];
-//     for (i = 0; i < len; i++) {
-//         k = k + 1;
-//     }
-
-//     // Inputs 
-//     k = k + 1;
-//     len = ba[k];
-//     for (i = 0; i < len; i++) {
-//         tx.inputs.push({ txid: ba.slice(k + 1, k + 33), index: ba.slice(k + 33, k + 35) });
-//         k = k + 34;
-//     }
-
-//     // Outputs 
-//     k = k + 1;
-//     len = ba[k];
-//     for (i = 0; i < len; i++) {
-//         tx.outputs.push({ assetid: ba.slice(k + 1, k + 33), value: ba.slice(k + 33, k + 41), scripthash: ba.slice(k + 41, k + 61) });
-//         k = k + 60;
-//     }
-
-//     return tx;
-// };
-
 /***/ }),
 /* 77 */
 /***/ (function(module, exports, __webpack_require__) {
