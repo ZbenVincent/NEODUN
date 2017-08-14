@@ -16,22 +16,10 @@
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-      <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-    <script src="js/vendor/CryptoJS/sha256.js"></script>
-    <script src="js/vendor/CryptoJS/ripemd160.js"></script>
-    <script src="js/vendor/CryptoJS/aes.js"></script>
-    <script src="js/vendor/CryptoJS/pad-nopadding.js"></script>
 
-    <!--<script src="js/vendor/sm.js"></script>-->
-    <script src="js/vendor/ecdsa_bundle.js"></script>
-    <script src="js/vendor/secp256k1_bundle.js"></script>
-    <!-- <script src="https://cdn.bootcss.com/jquery/2.1.1/jquery.min.js"></script>	 -->
     <script src="js/dist/jquery-2.1.3.min.js"></script>
     <script src="js/dist/bootstrap.js"></script>
-    <script src="js/wallet.js"></script>
+    <!-- <script src="js/wallet.js"></script> -->
     <script src="js/dist/vue.min.js"></script>
     <script src="js/styleupdate.js"></script>
 
@@ -39,23 +27,24 @@
 
 <body>
     <div class="startLoading">
-        <img class="logo" src="img/LOGO.png">
+        <img class="logo" src="img/LOGO.jpg">
     </div>
-    <!-- Fixed navbar -->
-    <nav class="nav navbar-inverse navbar-fixed-top">
-        <div>
-            <div class="navbar-header">
-                <a class="navbar-brand" href="#">NEODUN</a>
-                <button type="button" class="btn btn-default btn-lg navbar-btn navbar-left" data-toggle="modal" data-target="#createWallet"> 
-                导入您的地址
-                </button>
-            </div>
-        </div>
-        <!--/.nav-collapse -->
-    </nav>
 
     <div class="container">
         <div id="app">
+            <!-- Fixed navbar -->
+            <nav class="nav navbar-fixed-top" style="background-color: rgb(51,89,128);">
+                <div>
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="#" style="color:aliceblue">NEODUN</a>
+                        <button type="button" @click.prevent="verifyClean('new-wallet')" class="btn btn-default navbar-btn" data-toggle="modal" data-target="#createWallet"> 
+                导入您的地址
+                </button>
+                    </div>
+                </div>
+                <!--/.nav-collapse -->
+            </nav>
+
             <div class="panel-group" id="accordion">
                 <div class="panel panel-default">
                     <div class="panel-heading">
@@ -67,24 +56,25 @@
                     </div>
                     <div id="collapseOne" class="panel-collapse collapse in">
                         <div class="panel-body">
-                            <div v-for="(wallet, index) in wallets" class="panel panel-default">
-                                <div @click.prevent="showAction(index)">
-                                    <div class="panel-heading" >
+                            <div v-for="(wallet, index) in wallets">
+                                <div @click.prevent="showAction(index)" class="panel panel-default">
+                                    <div class="panel-heading">
                                         <span class="fa fa-chevron-down close"></span>
                                         <div class="panel-title" style="word-break:break-all;">
-                                            <a class="btn btn-default" v-if="showAddress != index" @click.prevent="addressModel(index)" onClick="event.cancelBubble = true">{{wallet.showAddress}}</a>
-                                            <a class="btn btn-default" v-else @click.prevent="addressModel('false')" onClick="event.cancelBubble = true">{{ wallet.hideAddress }}</a>
-                                            <span class="fa fa-eye" v-if="!wallet.ifPrivate">仅查看</span>
-                                            <span class="fa fa-money" v-else>可转账</span>
-                                            <span class="fa fa-lock" v-if="wallet.ciphertext!='' && wallet.ciphertext!=undefined" aria-hidden="true">密码保护</span>
+                                            <span class="fa fa-eye label label-primary" v-if="!wallet.ifPrivate">仅查看</span>
+                                            <span class="fa fa-check label label-primary" v-else>可转账</span>
+                                            <span class="fa fa-lock label label-primary" v-if="wallet.ciphertext!='' && wallet.ciphertext!=undefined" aria-hidden="true">密码保护</span><br><br>
+                                            <code class="btn btn-default" style="width:100%" v-if="showAddress != index" @click.prevent="addressModel(index)" onClick="event.cancelBubble = true">{{wallet.showAddress}}</code>
                                         </div>
+                                        <h4>{{wallet.name}}</h4>
                                     </div>
                                     <div class="panel-body row">
                                         <div v-for="item in wallet.allassets" class="col-sm-1">{{ item.name }} {{item.balance}}</div>
                                     </div>
-                                    <div v-if="showManipulate==index">
-                                        <span class="btn btn-warning fa fa-trash fa-lg" data-toggle="modal" data-target="#deleteAddress" @click.prevent="deleteData.index=index;deleteData.address=wallet.hideAddress"> 删除此地址</span>
-                                        <span v-if="wallet.ciphertext!=''" class="btn btn-info fa fa-money fa-lg" data-toggle="modal" data-target="#" @click.prevent="openLogin(index)"> 转账</span>
+                                    <div class="panel-footer" v-if="showManipulate==index">
+                                        <span class="btn btn-warning" data-toggle="modal" data-target="#deleteAddress" @click.prevent="deleteData.index=index;deleteData.address=wallet.address"> 删除</span>
+                                        <span v-if="wallet.ciphertext!=''" class="btn btn-info" data-toggle="modal" data-target="#" @click.prevent="openLogin(index)"> 转账</span>
+                                        <span class="btn btn-info" @click.prevent="openSetName(index)">昵称</span>
                                     </div>
                                 </div>
                             </div>
@@ -94,7 +84,7 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
-                            <span  class="fa fa-btc fa-lg"  data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+                            <span class="fa fa-btc fa-lg" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
                                 比特币
                             </span>
                         </h4>
@@ -106,6 +96,89 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 创建钱包（Modal）-->
+            <div class="modal fade " id="createWallet" tabindex="-1" role="dialog" aria-labelledby="createWallet" aria-hidden="false">
+                <div class="modal-dialog ">
+                    <div class="modal-content ">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="walletPassword">导入地址</h4>
+                        </div>
+                        <div class="modal-body ">
+                            <label for="firstname" class="control-label">请输入WIF/Address</label>
+                            <div id="address-input" v-bind:class="{danger: reminderControl.isNewAddress.isInputErr}">
+                                <input type="text" class="form-control input-hint" v-model="newWallet.address" v-on:blur="verifyAddReminder('new-address')" id="address" placeholder="请输入地址或WIF">
+                                <p class="prompt">{{reminderControl.isNewAddress.message}}</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button v-if="newWallet.address.length!=52" class="btn btn-info" data-toggle="modal" @click="createWallet" data-target="#saveWallet">添加</button>
+                            <button v-if="newWallet.address.length==52" class="btn btn-info" data-toggle="modal" @click="$('#createWallet').modal('hide'); $('#createPassword').modal('show');" data-target="#saveWallet">下一步</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal -->
+
+            <!-- 设置密码（Modal）-->
+            <div class="modal fade" id="createPassword" tabindex="-1" role="dialog" aria-labelledby="createPassword" aria-hidden="false">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="walletPassword">设置您的密码</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div id="password-input" v-bind:class="{danger: reminderControl.isNewPassword.isInput1Err}">
+                                <label for="firstname" class="control-label">请输入密码</label>
+                                <input type="password" id="firstname" class="form-control input-hint" v-model="newWallet.password1" v-on:blur="verifyAddReminder('new-password')" placeholder="请输入长度为6的密码">
+                                <p class="prompt">{{reminderControl.isNewPassword.message1}}</p>
+                                <label for="firstname" class="control-label">请再次输入</label>
+                            </div>
+                            <div id="password-input" v-bind:class="{danger: reminderControl.isNewPassword.isInput2Err}">
+                                <input type="password" class="form-control input-hint" v-model="newWallet.password" v-on:blur="verifyAddReminder('new-password')" id="firstname" placeholder="输入与上面一样滴">
+                                <p class="prompt">{{reminderControl.isNewPassword.message2}}</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-info" data-toggle="modal" @click="createWallet()" data-target="#saveWallet">确认</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal -->
+
+            <!-- 交易（Modal）-->
+            <div class="modal fade" id="businessOpen" tabindex="-1" role="dialog" aria-labelledby="businessOpen" aria-hidden="false">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="walletPassword">开始交易</h4>
+                        </div>
+                        <div class="modal-body">
+                            <label for="toAddress" class="control-label">请输入您的交易地址</label>
+                            <div id="business-input" v-bind:class="{danger: reminderControl.isBusiness.isToAddressErr}">
+                                <input type="text" v-on:blur="verifyAddReminder('business')" class="form-control input-hint" v-model="businessMessage.toAddress" id="firstname" placeholder="请输入交易地址">
+                                <p class="prompt">{{reminderControl.isBusiness.message1}}</p>
+                            </div>
+                            <div>
+                                <label for="transactionAmount" class="control-label">请输入交易金额</label>
+                                <div id="password-input" v-bind:class="{danger: reminderControl.isBusiness.isAmountErr}">
+                                    <input type="text" v-on:blur="verifyAddReminder('business')" class="form-control input-hint" v-model="businessMessage.amount" id="firstname" placeholder="输入金额">
+                                    <p class="prompt">{{reminderControl.isBusiness.message2}}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-info" data-toggle="modal" @click="business()" data-target="#saveWallet">确认</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal -->
 
             <!-- 登录（Modal）-->
             <div class="modal fade" id="loginWallet" tabindex="-1" role="dialog" aria-labelledby="loginWallet" aria-hidden="false">
@@ -127,82 +200,13 @@
             </div>
             <!-- /.modal -->
 
-            <!-- 创建钱包（Modal）-->
-            <div class="modal fade " id="createWallet" tabindex="-1" role="dialog" aria-labelledby="createWallet" aria-hidden="false">
-                <div class="modal-dialog ">
-                    <div class="modal-content ">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="walletPassword">导入地址</h4>
-                        </div>
-                        <div class="modal-body">
-                            <label for="firstname" class="control-label">请输入WIF/Address</label>
-                            <input type="text" class="form-control" v-model="newWallet.address" id="address" placeholder="请输入地址或WIF">
-                        </div>
-                        <div class="modal-footer">
-                            <button v-if="newWallet.address.length!=52" class="btn btn-info" data-toggle="modal" @click="createWallet" data-target="#saveWallet">添加</button>
-                            <button v-if="newWallet.address.length==52" class="btn btn-info" data-toggle="modal" @click="$('#createWallet').modal('hide'); $('#createPassword').modal('show');" data-target="#saveWallet">下一步</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- /.modal -->
-
-            <!-- 交易（Modal）-->
-            <div class="modal fade" id="businessOpen" tabindex="-1" role="dialog" aria-labelledby="businessOpen" aria-hidden="false">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="walletPassword">开始交易</h4>
-                        </div>
-                        <div class="modal-body">
-                            <label for="firstname" class="control-label">请输入您的交易地址</label>
-                            <input type="text" class="form-control" v-model="businessMessage.toAddress" id="firstname" placeholder="请输入交易地址">
-                            <div>
-                                <label for="firstname" class="control-label">请输入交易金额</label>
-                                <input type="text" class="form-control" v-model="businessMessage.amount" id="firstname" placeholder="输入与上面一样滴">
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-info" data-toggle="modal" @click="business()" data-target="#saveWallet">确认</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- /.modal -->
-
-            <!-- 设置密码（Modal）-->
-            <div class="modal fade" id="createPassword" tabindex="-1" role="dialog" aria-labelledby="createPassword" aria-hidden="false">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="walletPassword">设置您的密码</h4>
-                        </div>
-                        <div class="modal-body">
-                            <label for="firstname" class="control-label">请输入密码</label>
-                            <input type="text" class="form-control" v-model="newWallet.password1" id="firstname" placeholder="请输入长度为8的密码">
-                            <div v-if="newWallet.password1.length >= 8">
-                                <label for="firstname" class="control-label">请再次输入</label>
-                                <input type="password" class="form-control" v-model="newWallet.password" id="firstname" placeholder="输入与上面一样滴">
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-info" data-toggle="modal" @click="createWallet" data-target="#saveWallet">确认</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- /.modal -->
-
             <!-- 弹框消息（Modal）-->
             <div class="modal fade" id="alert" tabindex="-1" role="dialog" aria-labelledby="alert" aria-hidden="false">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" id="alertMessg">{{alertMessage}}</h4>
+                            <h4 class="modal-title" style="word-break:break-all;" id="alertMessg">{{alertMessage}}</h4>
                         </div>
                     </div>
                 </div>
@@ -271,17 +275,43 @@
                 </div>
             </div>
             <!-- /.modal -->
+            <!-- 设置昵称（Modal）-->
+            <div class="modal fade" id="setName" tabindex="-1" role="dialog" aria-labelledby="setName" aria-hidden="false">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h4 class="modal-title" id="walletPassword">设置昵称</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div id="password-input" v-bind:class="{danger: reminderControl.isNewPassword.isInput1Err}">
+                                <label for="firstname" class="control-label">请输入昵称</label>
+                                <input type="text" id="firstname" class="form-control input-hint" v-model="setWallet.name" placeholder="请输入您喜欢的昵称">
+                                <p class="prompt">{{reminderControl.isNewPassword.message1}}</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-info" data-toggle="modal" @click="setWalletName()" data-target="#saveWallet">确认</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal -->
             <footer>
-                <ul class="nav nav-tabs  navbar-inverse navbar-fixed-bottom">
-                    <li class="active"><a href="#">钱包</a></li>
-                    <li><a href="#">行情</a></li>
-                    <li><a href="#">开发者</a></li>
+                <ul class="nav nav-pills navbar-fixed-bottom">
+                    <li class="active">
+                        <img class="btn btn-primary" src="img/wallet.png" height="40" width="50">
+                    </li>
+                    <li><img src="img/market.png" class="btn btn-primary" height="40" width="50">
+                    </li>
+                    <li><img src="img/developer.png" class="btn btn-primary" height="40" width="50">
+                    </li>
                 </ul>
             </footer>
         </div>
 </body>
 <script src="js/dataUtil.js"></script>
-<script src="js/index.js"></script>
+<script src="js/dist/bundle.js"></script>
 </div>
 
 </html>

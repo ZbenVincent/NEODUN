@@ -1,229 +1,496 @@
-    if (localStorage.wallets == undefined || localStorage.wallets == "[]" || localStorage.wallets == "") {
-        localStorage.setItem("wallets", "[]");
-    }
-    /**
-     * 
-     * @param {*钱包名称} name 
-     * @param {*地址} address 
-     * @param {*余额} allassets 
-     * @param {*签名数据} ciphertext 
-     * @param {*是否有私钥} ifPrivate 
-     */
-    function createShowObj(name, address, allassets, ciphertext, ifPrivate) {
+import chai from 'chai';
+import {
+    ab2str,
+    str2ab,
+    hexstring2ab,
+    ab2hexstring,
+    reverseArray,
+    numStoreInMemory,
+    stringToBytes
+} from './src/utils';
+import * as wallet from './src/wallet';
+import * as api from './src/api';
+import axios from 'axios';
+var chaiAsPromised = require("chai-as-promised");
+chai.use(chaiAsPromised);
+const should = chai.should();
 
-        let obj = {
-            name: name,
-            allassets: allassets,
-            showAddress: address.substr(0, 4) + "***" + address.substr(address.length - 4, address.length - 1),
-            ciphertext: ciphertext,
-            hideAddress: address,
-            ifPrivate: ifPrivate
-        }
-        return obj;
-    }
+if (localStorage.wallets == undefined || localStorage.wallets == "[]" || localStorage.wallets == "") {
+    localStorage.setItem("wallets", "[]");
+}
+/**
+ * 
+ * @param {*钱包名称} name 
+ * @param {*地址} address 
+ * @param {*余额} allassets 
+ * @param {*签名数据} ciphertext 
+ * @param {*是否有私钥} ifPrivate 
+ */
+function createShowObj(name, address, allassets, ciphertext, ifPrivate) {
 
+    let obj = {
+        name: name,
+        allassets: allassets,
+        showAddress: address.substr(0, 4) + "***" + address.substr(address.length - 4, address.length - 1),
+        ciphertext: ciphertext,
+        address: address,
+        ifPrivate: ifPrivate
+    };
+    return obj;
+};
+
+class WalletObject {
+    constructor(name, address, allassets, ciphertext, ifPrivate) {
+        this.name = name;
+        this.address = address;
+        this.showAddress = address.substr(0, 4) + "***" + address.substr(address.length - 4, address.length - 1);
+        this.allassets = allassets;
+        this.ciphertext = ciphertext;
+        this.ifPrivate = ifPrivate;
+    };
+
+}
+
+/**
+ * 钱包工具类
+ */
+class WalletList {
+    constructor() {
+        this.address = "";
+        this.currency = "";
+        this.number = 0;
+    };
     /**
-     * 钱包工具类
+     * 添加钱包
+     * @param {*钱包对象} walletObj 
      */
-    class WalletList {
-        constructor() {
-            this.address = "";
-            this.currency = "";
-            this.number = 0;
-        }
-        /**
-         * 添加钱包
-         * @param {*钱包对象} walletObj 
-         */
-        addWallet(walletObj) {
-            let wallets = localStorage.wallets;
-            // this.address = address;
-            if (wallets != undefined) {
-                let walletArr = Array();
-                walletArr = JSON.parse(localStorage.wallets);
-                for (var i = 0; i < walletArr.length; i++) {
-                    if (walletArr[i]["address"] == walletObj.address) {
-                        // this.alertMessage = "校验失败，请输入正确的WIF";
-                        $('#alert').modal('show');
-                        return false;
-                    }
-                }
-                walletArr.push(walletObj);
-                localStorage.wallets = JSON.stringify(walletArr);
-                return true;
-            }
-        }
-        /**
-         * 删除钱包
-         * @param {*钱包数组下标} index 
-         */
-        deleteWallet(index) {
-            let wallets = Array();
-            wallets = JSON.parse(localStorage.wallets);
-            wallets.splice(index, 1);
-            localStorage.wallets = JSON.stringify(wallets);
+    addWallet(walletObj) {
+        let wallets = localStorage.wallets;
+        // this.address = address;
+        if (!this.findAddress(walletObj.address)) {
+            let walletArr = Array();
+            walletArr = JSON.parse(localStorage.wallets);
+            walletArr.push(walletObj);
+            localStorage.wallets = JSON.stringify(walletArr);
             return true;
         }
-        /**
-         * 获得未使用资产
-         * @param {*地址} address 
-         */
-        getUnspent(address) {
-            let unspent = new Array();
-            $.ajax({
-                url: "http://testnet.antchain.org:80/api/v1/address/get_unspent/" + address,
-                type: 'GET',
-                async: true,
-                success: function(result) {
-                    // Do something with the result
-                    for (var i = 0; i < result.length; i++) {
-                        unspent.push(result[i]);
-                    }
-                    // unspent=result;
-                },
-                error: function(data) {
-                    console.log(data);
-                }
-            });
-            return unspent;
-        }
-        /**
-         * 获得钱包
-         */
-        getWallets() {
-            let wallets = localStorage.wallets;
-            let showWallets = new Array();
-            if (wallets != undefined && wallets != '') {
-                let arr = JSON.parse(wallets);
-                if (arr.length != 0) {
-                    let usarr = new Array();
-                    for (var i = 0; i < arr.length; i++) {
-                        let address = arr[i].address;
-                        let name = arr[i].name;
-                        let ciphertext = arr[i].ciphertext;
-                        let allassets = this.getUnspent(address);
-                        let show = createShowObj(name, address, allassets, ciphertext, ciphertext != undefined && ciphertext != '' ? true : false);
-                        showWallets.push(show);
+        return false;
+    };
+    /**
+     * 删除钱包
+     * @param {*钱包数组下标} index 
+     */
+    deleteWallet(index) {
+        let wallets = Array();
+        wallets = JSON.parse(localStorage.wallets);
+        wallets.splice(index, 1);
+        localStorage.wallets = JSON.stringify(wallets);
+        return true;
+    };
+    //修改钱包对象
+    setWallet($index, $obj) {
 
-                    }
+        let wallets = Array();
+        wallets = JSON.parse(localStorage.wallets);
+        wallets[$index] = $obj;
+        localStorage.wallets = JSON.stringify(wallets);
+        return true;
+    };
+    /**
+     * 获得未使用资产
+     * @param {*地址} address 
+     */
+    getUnspent($address) {
+        let unspent = new Array();
+        api.getBalance(api.TESTNET, $address).then((response) => {
+            unspent.push({ name: '小蚁股', balance: response.ANS });
+            unspent.push({ name: '小蚁币', balance: response.ANC });
+        });
+        return unspent;
+    };
+    /**
+     * 获得钱包
+     */
+    getWallets() {
+        let wallets = localStorage.wallets;
+        let showWallets = new Array();
+        if (wallets != undefined && wallets != '') {
+            let arr = JSON.parse(wallets);
+            if (arr.length != 0) {
+                let usarr = new Array();
+                for (var i = 0; i < arr.length; i++) {
+                    let address = arr[i].address;
+                    let name = arr[i].name;
+                    let ciphertext = arr[i].ciphertext;
+                    let allassets = this.getUnspent(address);
+                    let show = new WalletObject(name, address, allassets, ciphertext, ciphertext != undefined && ciphertext != '' ? true : false);
+                    // let show = createShowObj(name, address, allassets, ciphertext, ciphertext != undefined && ciphertext != '' ? true : false);
+                    showWallets.push(show);
+
                 }
             }
-            return showWallets;
         }
-    }
-    let walletUtil = new Wallet();
-    // VerifyAddress
-    let walletList = new WalletList();
+        return showWallets;
+    };
     /**
-     * vue模型层
+     * 查找地址是否已存在
+     * @param {*地址} $address 
      */
-    var vm = new Vue({
-        el: '#app',
-        data: {
-            newWallet: {
+    findAddress($address) {
+        let wallets = localStorage.wallets;
+        // this.address = address;
+        if (wallets != undefined) {
+            let walletArr = Array();
+            walletArr = JSON.parse(localStorage.wallets);
+            for (var i = 0; i < walletArr.length; i++) {
+                if (walletArr[i]["address"] == $address) {
+                    // this.alertMessage = "校验失败，请输入正确的WIF";
+                    // $('#alert').modal('show');
+                    return true;
+                }
+            }
+        } else {
+            return false;
+        }
+    };
+}
+let walletList = new WalletList();
+/**
+ * vue模型层
+ */
+var vm = new Vue({
+    el: '#app',
+    data: {
+        newWallet: {
+            id: '',
+            name: '',
+            allassets: [{ assetid: '', name: '小蚁股', list: [], balance: 0 }, { assetid: '', name: '小蚁币', list: [], balance: 0 }],
+            address: '',
+            currency: '',
+            number: 0,
+            ciphertext: '',
+            password: '',
+            password1: ''
+        },
+        setWallet: {
+            name: '',
+            index: 0
+        },
+        wallets: walletList.getWallets(),
+        loginData: {
+            walletIndex: 0,
+            ciphertext: '',
+            password: ''
+        },
+        alertMessage: "",
+        businessMessage: {
+            toAddress: '',
+            address: '',
+            amount: 0,
+            publickeyEncoded: '',
+            privatekey: '',
+            account: {}
+        },
+        showAddress: 'false',
+        showManipulate: 'false',
+        deleteData: {
+            index: 0,
+            address: ''
+        },
+        reminderControl: {
+            isNewAddress: { isInputErr: false, message: '' },
+            isNewPassword: {
+                isInput2Err: false,
+                isInput1Err: false,
+                message1: '',
+                message2: ''
+            },
+            isBusiness: {
+                isToAddressErr: false,
+                message1: '',
+                isAmountErr: false,
+                message2: ''
+            }
+        },
+    },
+    mounted() {
+        console.log("页面加载完成");
+        this.refreshBalance();
+    },
+    methods: {
+        //刷新余额
+        refreshBalance() {
+            setInterval(() => {
+                this.wallets = walletList.getWallets();
+            }, 30000);
+        },
+        //展示操作
+        showAction($index) {
+            var index = "" + $index;
+            if (this.showManipulate == index)
+                this.showManipulate = 'false';
+            else
+                this.showManipulate = index;
+        },
+        //展开或缩小地址
+        addressModel($index) {
+            // var index = $index;
+            // this.showAddress = index;
+            this.alertMessage = this.wallets[$index].address;
+            $('#alert').modal('show');
+        },
+        //新建增钱包
+        createWallet() {
+            let walletObj = {
+                name: '',
+                allassets: new Array(),
+                showAddress: '',
+                address: '',
+                ciphertext: '',
+                ifPrivate: false
+            };
+            //判断是否有密码，如果有则是wif,没有则是Address
+            let ret = this.verifyAddReminder('new-address');
+            //添加地址
+            if (ret == 'address') {
+                walletObj.address = this.newWallet.address;
+                walletObj.allassets = walletList.getUnspent(this.newWallet.address);
+                if (walletList.addWallet(walletObj)) {
+                    // let objShow = createShowObj('', walletObj.address, walletObj.allassets, '', false);
+                    let objShow = new WalletObject('', walletObj.address, walletObj.allassets, '', false);
+                    this.wallets.push(objShow);
+                    this.alertMessage = "地址导入成功";
+                    $('#createWallet').modal('hide');
+                    $('#alert').modal('show');
+                };
+                return;
+            };
+            //添加wif
+            if (ret == 'wif') {
+                if (this.verifyAddReminder('new-password') == 'validated') {
+                    let privateKey = wallet.getPrivateKeyFromWIF(this.newWallet.address);
+                    let password = this.newWallet.password;
+                    let encryptData = wallet.encryptNeodunPrivateKey(privateKey, password);
+                    let address = wallet.getAccountsFromPrivateKey(privateKey)[0].address;
+                    let allassets = walletList.getUnspent(address);
+                    walletObj.address = address;
+                    walletObj.ciphertext = encryptData;
+                    if (walletList.addWallet(walletObj)) {
+                        // let objShow = createShowObj('', address, allassets, encryptData, true);
+                        let objShow = new WalletObject('', address, allassets, encryptData, true);
+                        this.wallets.push(objShow);
+                        this.alertMessage = "WIF导入成功";
+                        $('#createPassword').modal('hide');
+                        $('#alert').modal('show');
+                        $('#createPassword').modal('hide');
+                        return;
+                    }
+                };
+                return;
+            };
+            // 添加完newWallet对象后，重置newWallet对象
+            this.newWallet = {
                 id: '',
                 name: '',
-                allassets: [{ assetid: '', name: '小蚁股', list: [], balance: 0 }, { assetid: '', name: '小蚁币', list: [], balance: 0 }],
+                allassets: [],
                 address: '',
                 currency: '',
                 number: 0,
                 ciphertext: '',
                 password: '',
                 password1: ''
-            },
-            wallets: walletList.getWallets(),
-            loginData: {
-                walletIndex: 0,
+            }
+        },
+        //删除钱包
+        deleteWallet() {
+            // 删一个数组元素
+            if (walletList.deleteWallet(this.deleteData.index)) {
+                this.wallets.splice(this.deleteData.index, 1);
+                this.alertMessage = "删除成功";
+                $('#deleteAddress').modal('hide');
+                $('#alert').modal('show');
+            }
+        },
+        //初始化昵称到
+        openSetName($index) {
+            this.setName = this.wallets[$index].name;
+            this.setWallet.index = $index;
+            $('#setName').modal('show');
+        },
+        //更新昵称
+        setWalletName() {
+            this.wallets[this.setWallet.index].name = this.setWallet.name;
+            walletList.setWallet(this.setWallet.index, this.wallets[this.setWallet.index]);
+            $('#setName').modal('hide');
+        },
+        //开启登录
+        openLogin($index) {
+            let index = $index;
+            this.loginData.walletIndex = index;
+            this.verifyClean('business');
+            $('#businessOpen').modal('show');
+        },
+        //交易登录
+        loginWallet() {
+            let index = this.loginData.walletIndex;
+            let ciphertext = this.wallets[index].ciphertext;
+            let privateKey = wallet.decryptNeodunPrivateKey(ciphertext, this.loginData.password);
+            this.businessMessage.publickeyEncoded = wallet.getPublicKey(privateKey, true);
+            this.businessMessage.account = this.wallets[this.loginData.walletIndex].allassets[0];
+            this.businessMessage.address = this.wallets[this.loginData.walletIndex].address;
+            if (privateKey == '0') {
+                // $('#loginWallet').modal('hide');
+                this.alertMessage = "密码错误请重新输入";
+                $('#alert').modal('show');
+            } else {
+                this.businessMessage.privatekey = privateKey;
+                $('#loginWallet').modal('hide');
+                this.alertMessage = "登录成功，开始交易吧";
+                $('#businessAlert').modal('show');
+            }
+            //清空登录信息
+            this.loginData = {
+                walletIndex: index,
                 ciphertext: '',
                 password: ''
-            },
-            alertMessage: "",
-            businessMessage: {
+            }
+        },
+        //交易
+        business() {
+            if (this.verifyAddReminder('business') == 'validated') {
+                $('#businessOpen').modal('hide');
+                $('#loginWallet').modal('show');
+            };
+            return;
+            // $('#businessMessage').modal('show');
+        },
+        //进行交易
+        SignTxAndSend() {
+            var publicKeyEncoded = this.businessMessage.publickeyEncoded;
+            var privateKey = this.businessMessage.privatekey;
+            $('#businessAlert').modal('hide');
+            $('#loader').modal('show');
+            // console.log(wallet.getWIFFromPrivateKey(privateKey));
+            api.sendAssetTransaction(
+                api.TESTNET,
+                this.businessMessage.toAddress,
+                wallet.getWIFFromPrivateKey(privateKey),
+                'AntShares',
+                this.businessMessage.amount).then((response) => {
+                if (response.data.result) {
+                    $('#loader').modal('hide');
+                    $('#businessAlert').modal('hide');
+                    this.alertMessage = "交易成功";
+                    $('#alert').modal('show');
+                }
+            });
+            this.businessMessage = {
                 toAddress: '',
-                address:'',
                 amount: 0,
                 publickeyEncoded: '',
                 privatekey: '',
                 account: {}
-            },
-            showAddress: 'false',
-            showManipulate: 'false',
-            deleteData: {
-                index: 0,
-                address: ''
             }
         },
-        methods: {
-            //展示操作
-            showAction: function($index) {
-                var index = "" + $index;
-                if (this.showManipulate == index)
-                    this.showManipulate = 'false';
-                else
-                    this.showManipulate = index;
-            },
-            //展开或缩小地址
-            addressModel: function($index) {
-                var index = $index;
-                this.showAddress = index;
-            },
-            //新建增钱包
-            createWallet: function() {
-                // this.wallets.push(this.newWallet);
-                // alert(this.newWallet.address);
-                let walletObj = {
-                    name: '',
-                    allassets: new Array(),
-                    showAddress: '',
-                    hideAddress: '',
-                    ciphertext: '',
-                    ifPrivate: false
+        //验证与提醒
+        verifyAddReminder($type) {
+            //新增地址的验证
+            if ($type == 'new-address') {
+                let newAddress = this.newWallet.address;
+                if (newAddress == '' || newAddress == undefined) {
+                    this.reminderControl.isNewAddress.message = '地址不能为空';
+                    this.reminderControl.isNewAddress.isInputErr = true;
+                    return 'err-null';
                 }
-                /**
-                 * 判断是否有密码，如果有则是wif,没有则是Address
-                 */
-                if (this.newWallet.password != "" && this.newWallet.password != undefined) {
-                    let privateKey = Wallet.getPrivateKeyFromWIF(this.newWallet.address);
-                    let password = this.newWallet.password;
-                    // Wallet.generateWalletFileBlob(wif,this.newWallet.password)
-                    if (privateKey == -1 || privateKey == -2) {
-                        this.alertMessage = "校验失败，请输入正确的WIF";
-                        $('#createPassword').modal('hide');
-                        $('#alert').modal('show');
+
+                if (walletList.findAddress(newAddress)) {
+                    this.reminderControl.isNewAddress.message = '您已添加过此地址';
+                    this.reminderControl.isNewAddress.isInputErr = true;
+                    return 'err-format';
+                };
+                if (newAddress.length == 34) {
+                    if (!wallet.verifyAddress(newAddress)) {
+                        this.reminderControl.isNewAddress.message = '请输入正确格式的地址';
+                        this.reminderControl.isNewAddress.isInputErr = true;
+                        return 'err-format';
                     } else {
-                        let encryptData = Wallet.encryptNeodunPrivateKey(this.newWallet.address, password)
-                        let address = Wallet.GetAccountsFromPrivateKey(privateKey)[0].address;
-                        let allassets = walletList.getUnspent(address);
-                        walletObj.address = address;
-                        walletObj.ciphertext = encryptData;
-                        // $('#createPassword').modal('show');    
-                        if (walletList.addWallet(walletObj)) {
-                            let objShow = createShowObj('', address, allassets, encryptData, true);
-                            this.wallets.push(objShow);
-                            this.alertMessage = "WIF导入成功";
-                            $('#createPassword').modal('hide');
-                            $('#alert').modal('show');
-                        }
+                        this.reminderControl.isNewAddress.isInputErr = false;
+                        return 'address';
                     }
-                } else if (Wallet.VerifyAddress(this.newWallet.address)) {
-                    // console.log("地址正确");
-                    // let num = walletList.getUnspent(this.newWallet.address);
-                    // walletObj.number = num;     
-                    walletObj.address = this.newWallet.address;
-                    walletObj.allassets = walletList.getUnspent(this.newWallet.address);
-                    if (walletList.addWallet(walletObj)) {
-                        let objShow = createShowObj('', walletObj.address, walletObj.allassets, '', false);
-                        this.wallets.push(objShow);
-                        this.alertMessage = "地址导入成功";
-                        $('#createWallet').modal('hide');
-                        $('#alert').modal('show');
+                } else if (newAddress.length == 52) {
+                    let privateKey = wallet.getPrivateKeyFromWIF(newAddress);
+                    if (privateKey == -1 || privateKey == -2) {
+                        this.reminderControl.isNewAddress.message = '请输入正确的WIF';
+                        this.reminderControl.isNewAddress.isInputErr = true;
+                    } else {
+                        this.reminderControl.isNewAddress.isInputErr = false;
+                        return 'wif';
                     }
                 } else {
-                    this.alertMessage = "请输入正确地址";
-                    $('#createWallet').modal('hide');
-                    $('#alert').modal('show');
+                    this.reminderControl.isNewAddress.message = '请输入正确格式的地址或者私钥';
+                    this.reminderControl.isNewAddress.isInputErr = true;
+                    return 'err-format';
                 }
-                // 添加完newWallet对象后，重置newWallet对象
+            };
+            //新增密码的验证
+            if ($type == 'new-password') {
+                let password = this.newWallet.password;
+                let password1 = this.newWallet.password1;
+                if (password1.length < 6) {
+                    this.reminderControl.isNewPassword.message1 = '密码长度不得小于6位';
+                    this.reminderControl.isNewPassword.isInput1Err = true;
+                    // return 'err-format';
+                    return 'err-format';
+                } else {
+                    this.reminderControl.isNewPassword.isInput1Err = false;
+                }
+                if (password != password1) {
+                    this.reminderControl.isNewPassword.message2 = '密码不一致，请重新输入';
+                    this.reminderControl.isNewPassword.isInput2Err = true;
+                    // return 'err-difference';
+                    return 'err-format';
+                } else {
+                    this.reminderControl.isNewPassword.isInput2Err = false;
+                    return 'validated';
+                }
+            };
+            //交易的验证
+            if ($type == 'business') {
+                var busData = this.businessMessage;
+                var verifyResult = 'validated';
+                if (busData.toAddress == '' || busData.toAddress == undefined) {
+                    this.reminderControl.isBusiness.isToAddressErr = true;
+                    this.reminderControl.isBusiness.message1 = '交易地址不能为空';
+                    verifyResult = 'err-null';
+                    // return 'err-null';
+                } else if (!wallet.verifyAddress(busData.toAddress)) {
+                    this.reminderControl.isBusiness.isToAddressErr = true;
+                    this.reminderControl.isBusiness.message1 = '请输入正确的交易地址';
+                    verifyResult = 'err-format';
+                    // return 'err-format'
+                } else {
+                    this.reminderControl.isBusiness.isToAddressErr = false;
+                    // verifyResult = 'err-format';
+                };
+                //校验金额
+                if (isNaN(busData.amount)) {
+                    this.reminderControl.isBusiness.isAmountErr = true;
+                    this.reminderControl.isBusiness.message2 = '请输入正确的金额';
+                    verifyResult = 'err-format';
+                    // return 'err-format'
+                } else if (parseFloat(busData.amount) <= 0) {
+                    this.reminderControl.isBusiness.isAmountErr = true;
+                    this.reminderControl.isBusiness.message2 = '金额必须大于零';
+                    verifyResult = 'err-format';
+                } else {
+                    this.reminderControl.isBusiness.isAmountErr = false;
+                };
+                return verifyResult;
+            };
+
+        },
+        verifyClean($type) {
+            if ($type == 'new-wallet') {
                 this.newWallet = {
                     id: '',
                     name: '',
@@ -234,180 +501,65 @@
                     ciphertext: '',
                     password: '',
                     password1: ''
-                }
-            },
-            deleteWallet: function() {
-                // 删一个数组元素
-                if (walletList.deleteWallet(this.deleteData.index)) {
-                    this.wallets.splice(this.deleteData.index, 1);
-                    this.alertMessage = "删除成功";
-                    $('#deleteAddress').modal('hide');
-                    $('#alert').modal('show');
-                }
-            },
-            openLogin: function($index) {
-                let index = $index;
-                this.loginData.walletIndex = index;
-                $('#businessOpen').modal('show');
-            },
-            loginWallet: function() {
-                let index = this.loginData.walletIndex;
-                let ciphertext = this.wallets[index].ciphertext;
-                let wif = Wallet.decryptNeodunPrivateKey(ciphertext, this.loginData.password);
-                let privateKey = Wallet.getPrivateKeyFromWIF(wif);
-                this.businessMessage.publickeyEncoded = Wallet.getPublicKey(privateKey, true);
-                if (privateKey == -1 || privateKey == -2) {
-                    $('#loginWallet').modal('hide');
-                    this.alertMessage = "密码错误请重新输入";
-                    $('#alert').modal('show');
-                } else {
-                    this.businessMessage.privatekey = privateKey;
-                    $('#loginWallet').modal('hide');
-                    this.alertMessage = "登录成功，开始交易吧";
-                    $('#businessAlert').modal('show');
-                }
-                
-                this.loginData= {
-                    walletIndex: index,
-                    ciphertext: '',
-                    password: ''
-                }
-            },
-            //交易
-            business: function() {
-                this.businessMessage.account = this.wallets[this.loginData.walletIndex].allassets[0];
-                this.businessMessage.address = this.wallets[this.loginData.walletIndex].address;
-                console.log(this.businessMessage);
-                $('#businessOpen').modal('hide');
-                $('#loginWallet').modal('show');
-                // $('#businessMessage').modal('show');
-            },
-            SignTxAndSend: function() {
-                var txData = transferTransactionUnsigned(this.businessMessage)
-                var publicKeyEncoded = this.businessMessage.publickeyEncoded;
-                var privateKey = this.businessMessage.privatekey;
-                var sign = Wallet.signatureData(txData, privateKey);
-                var txRawData = Wallet.AddContract(txData, sign, publicKeyEncoded);
-                // console.log("txRawData:" + txRawData)
-                $('#businessAlert').modal('hide');
-                $('#loader').modal('show');
-                this.sendTransactionData(txRawData);
-                this.businessMessage= {
+                };
+                this.reminderControl.isNewAddress.message = '';
+                this.reminderControl.isNewAddress.isInputErr = false;
+                this.reminderControl.isNewPassword.isInput1Err = false;
+            };
+            if ($type == 'business') {
+                this.businessMessage = {
                     toAddress: '',
                     amount: 0,
                     publickeyEncoded: '',
                     privatekey: '',
                     account: {}
-                }
-            },
-            /**
-             * 广播签名
-             * @param {*签名数据}  
-             */
-            sendTransactionData: function($txData) {
-                var alertMessage = this.alertMessage;
-                $.ajax({
-                    url: "http://47.92.143.199:20332",
-                    type: 'POST',
-                    data: '{"jsonrpc": "2.0", "method": "sendrawtransaction", "params": ["' + $txData + '"], "id": 4}',
-                    async: true,
-                    success: function(result) {
-                        // Do something with the result
-                        $('#businessAlert').modal('hide');
-                        // console.log("result:" + JSON.stringify(result));
-                        if (result["result"]) {
-                            this.alertMessage = "交易成功";
-                            $('#alert').modal('show');
-                        } else {
-                            this.alertMessage = "交易失败，请重试";
-                            $('#alert').modal('show');
-                        }
-                        // unspent=result;
-                    },
-                    error: function(data) {
-                        // console.log("erro:" + JSON.stringify(data));
-                        $('#businessAlert').modal('hide');
-                        this.alertMessage = '交易异常,请稍后再试';
-                        $('#alert').modal('show');
-                    }
-                })
-            }
-        }
-    });
+                };
+                this.reminderControl.isBusiness.isToAddressErr = false;
+                this.reminderControl.isBusiness.isAmountErr = false;
 
-
-    //或缺的传输数据
-    function getTransferTxData($txData) {
-        var ba = new Buffer($txData, "hex");
-        var tx = new Transaction();
-
-        // Transfer Type
-        if (ba[0] != 0x80) return;
-        tx.type = ba[0];
-
-        // Version
-        tx.version = ba[1];
-
-        // Attributes
-        var k = 2;
-        var len = ba[k];
-        for (i = 0; i < len; i++) {
-            k = k + 1;
+            };
         }
 
-        // Inputs 
-        k = k + 1;
-        len = ba[k];
-        for (i = 0; i < len; i++) {
-            tx.inputs.push({ txid: ba.slice(k + 1, k + 33), index: ba.slice(k + 33, k + 35) });
-            //console.log( "txid:", tx.inputs[i].txid );
-            //console.log( "index:", tx.inputs[i].index );
-            k = k + 34;
-        }
-
-        // Outputs 
-        k = k + 1;
-        len = ba[k];
-        for (i = 0; i < len; i++) {
-            tx.outputs.push({ assetid: ba.slice(k + 1, k + 33), value: ba.slice(k + 33, k + 41), scripthash: ba.slice(k + 41, k + 61) });
-            //console.log( "outputs.assetid:", tx.outputs[i].assetid );
-            //console.log( "outputs.value:", tx.outputs[i].value );
-            //console.log( "outputs.scripthash:", tx.outputs[i].scripthash );
-            k = k + 60;
-        }
-
-        return tx;
-    };
-
-    transferTransactionUnsigned = function($message) {
-        var reg = /^[0-9]{1,19}([.][0-9]{0,8}){0,1}$/;
-        var r = $message.amount.match(reg);
-        var alertMessage = "";
-        if (r == null) {
-            alertMessage = "数额格式检查失败请重新输入";
-            // $('#alert').modal('show');
-            alert(alertMessage);
-            return false;
-        }
-        if ($message.amount <= 0) {
-            alertMessage = "数额必须大于零";
-            alert(alertMessage);
-            return false;
-        }
-        if (parseFloat($message.account.balance) < parseFloat($message.amount)) {
-            alertMessage = "余额不足";
-            alert(alertMessage);
-            return false;
-        }
-        var publicKeyEncoded = $message.publickeyEncoded;
-        var txData = Wallet.TransferTransaction(
-            $message.account, publicKeyEncoded, $message.toAddress, $message.amount);
-        if (txData == -1) {
-            alertMessage('地址验证失败。');
-            alert(alertMessage);
-            return false;
-        }
-
-        // $scope.txUnsignedData = txData;
-        return txData;
     }
+});
+
+
+
+
+// 或缺的传输数据
+// function getTransferTxData($txData) {
+//     var ba = new Buffer($txData, "hex");
+//     var tx = new Transaction();
+
+//     // Transfer Type
+//     if (ba[0] != 0x80) return;
+//     tx.type = ba[0];
+
+//     // Version
+//     tx.version = ba[1];
+
+//     // Attributes
+//     var k = 2;
+//     var len = ba[k];
+//     for (i = 0; i < len; i++) {
+//         k = k + 1;
+//     }
+
+//     // Inputs 
+//     k = k + 1;
+//     len = ba[k];
+//     for (i = 0; i < len; i++) {
+//         tx.inputs.push({ txid: ba.slice(k + 1, k + 33), index: ba.slice(k + 33, k + 35) });
+//         k = k + 34;
+//     }
+
+//     // Outputs 
+//     k = k + 1;
+//     len = ba[k];
+//     for (i = 0; i < len; i++) {
+//         tx.outputs.push({ assetid: ba.slice(k + 1, k + 33), value: ba.slice(k + 33, k + 41), scripthash: ba.slice(k + 41, k + 61) });
+//         k = k + 60;
+//     }
+
+//     return tx;
+// };
