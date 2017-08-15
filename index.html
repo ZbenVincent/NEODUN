@@ -66,10 +66,12 @@
                                             <span class="fa fa-lock label label-primary" v-if="wallet.ciphertext!='' && wallet.ciphertext!=undefined" aria-hidden="true">密码保护</span><br><br>
                                             <code class="btn btn-default" style="width:100%" v-if="showAddress != index" @click.prevent="addressModel(index)" onClick="event.cancelBubble = true">{{wallet.showAddress}}</code>
                                         </div>
-                                        <span v-if="wallet.name!=''" class="btn btn-default" style="width:100%">{{wallet.name}}</span>
+                                        <div style="width:100%; text-align:center;">
+                                            <h4 v-if="wallet.name!=''" style="text-align:center;">{{wallet.name}}</h4>
+                                        </div>
                                     </div>
                                     <div class="panel-body row">
-                                        <div v-for="item in wallet.allassets" class="col-sm-1">{{ item.name }} {{item.balance}}</div>
+                                        <div v-for="item in wallet.allassets " class="col-sm-2">{{ item.name }} {{item.balance}}</div>
                                     </div>
                                     <div class="panel-footer" v-if="showManipulate==index">
                                         <span class="btn btn-warning" data-toggle="modal" data-target="#deleteAddress" @click.prevent="deleteData.index=index;deleteData.address=wallet.address"> 删除</span>
@@ -310,7 +312,6 @@
             </footer>
         </div>
 </body>
-<script src="js/dataUtil.js"></script>
 <script src="js/dist/bundle.js"></script>
 </div>
 
