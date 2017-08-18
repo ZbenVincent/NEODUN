@@ -163,7 +163,18 @@
                         <div class="modal-body">
                             <label for="toAddress" class="control-label">请输入您的交易地址</label>
                             <div id="business-input" v-bind:class="{danger: reminderControl.isBusiness.isToAddressErr}">
-                                <input type="text" v-on:blur="verifyAddReminder('business')" class="form-control input-hint" v-model="businessMessage.toAddress" id="firstname" placeholder="请输入交易地址">
+                                <div class="input-group">
+                                    <input type="text" v-on:blur="verifyAddReminder('business')" class="form-control input-hint" v-model="businessMessage.toAddress" id="firstname" placeholder="请输入交易地址">
+                                    <div class="input-group-btn">
+                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu pull-right">
+                                            <li v-for="(wallet, index) in wallets"><a @click.prevent="businessMessage.toAddress=wallets[index].address">{{wallet.name}}  {{wallet.showAddress}}</a></li>
+                                        </ul>
+                                    </div>
+                                    <!-- /btn-group -->
+                                </div>
                                 <p class="prompt">{{reminderControl.isBusiness.message1}}</p>
                             </div>
                             <div>

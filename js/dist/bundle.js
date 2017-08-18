@@ -19813,6 +19813,12 @@ var vm = new Vue({
                     $('#businessAlert').modal('hide');
                     _this2.alertMessage = "交易成功";
                     $('#alert').modal('show');
+                } else {
+                    $('#loader').modal('hide');
+                    $('#businessAlert').modal('hide');
+                    _this2.alertMessage = "交易失败";
+                    $('#alert').modal('show');
+                    console.log(response);
                 }
             });
             this.businessMessage = {
@@ -40256,6 +40262,9 @@ var sendAssetTransaction = exports.sendAssetTransaction = function sendAssetTran
             var jsonData = { 'publicKey': publickeyEncoded, 'signature': sign, 'transaction': transaction };
             return _axios2.default.post(network.rpcEndpoint + '/broadcast', _qs2.default.stringify(jsonData)).then(function (response) {
                 return response;
+            }).catch(function (error) {
+                console.log(error);
+                return error;
             });
         });
     });

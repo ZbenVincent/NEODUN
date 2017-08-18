@@ -382,6 +382,12 @@ var vm = new Vue({
                     $('#businessAlert').modal('hide');
                     this.alertMessage = "交易成功";
                     $('#alert').modal('show');
+                } else {
+                    $('#loader').modal('hide');
+                    $('#businessAlert').modal('hide');
+                    this.alertMessage = "交易失败";
+                    $('#alert').modal('show');
+                    console.log(response);
                 }
             });
             this.businessMessage = {

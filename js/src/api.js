@@ -139,6 +139,9 @@ export const sendAssetTransaction = (net, toAddress, fromWif, assetType, amount)
             const jsonData = { 'publicKey': publickeyEncoded, 'signature': sign, 'transaction': transaction };
             return axios.post(network.rpcEndpoint + '/broadcast', qs.stringify(jsonData)).then((response) => {
                 return response;
+            }).catch((error) => {
+                console.log(error);
+                return error;
             });
         });
     });
