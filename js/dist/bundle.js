@@ -19413,6 +19413,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var chaiAsPromised = __webpack_require__(206);
 _chai2.default.use(chaiAsPromised);
 var should = _chai2.default.should();
+var isMainNet = false;
 
 if (localStorage.wallets == undefined || localStorage.wallets == "[]" || localStorage.wallets == "") {
     localStorage.setItem("wallets", "[]");
@@ -19515,9 +19516,10 @@ var WalletList = function () {
          * 获得未使用资产
          * @param {*地址} address 
          */
-        value: function getUnspent($address) {
+        value: function getUnspent($address, $isMainNet) {
             var unspent = new Array();
-            api.getBalance(api.TESTNET, $address).then(function (response) {
+            console.log($isMainNet);
+            api.getBalance($isMainNet ? api.MAINNET : api.TESTNET, $address).then(function (response) {
                 unspent.push({ name: '小蚁股', balance: response.ANS });
                 unspent.push({ name: '小蚁币', balance: response.ANC });
             });
@@ -19529,7 +19531,7 @@ var WalletList = function () {
         /**
          * 获得钱包
          */
-        value: function getWallets() {
+        value: function getWallets(isMainNet) {
             var wallets = localStorage.wallets;
             var showWallets = new Array();
             if (wallets != undefined && wallets != '') {
@@ -19540,7 +19542,7 @@ var WalletList = function () {
                         var address = arr[i].address;
                         var name = arr[i].name;
                         var ciphertext = arr[i].ciphertext;
-                        var allassets = this.getUnspent(address);
+                        var allassets = this.getUnspent(address, isMainNet);
                         var show = new WalletObject(name, address, allassets, ciphertext, ciphertext != undefined && ciphertext != '' ? true : false);
                         // let show = createShowObj(name, address, allassets, ciphertext, ciphertext != undefined && ciphertext != '' ? true : false);
                         showWallets.push(show);
@@ -19600,7 +19602,7 @@ var vm = new Vue({
             name: '',
             index: 0
         },
-        wallets: walletList.getWallets(),
+        wallets: walletList.getWallets(isMainNet),
         loginData: {
             walletIndex: 0,
             ciphertext: '',
@@ -19635,10 +19637,11 @@ var vm = new Vue({
                 isAmountErr: false,
                 message2: ''
             }
-        }
+        },
+        isMainNet: false
     },
     mounted: function mounted() {
-        console.log("页面加载完成");
+        // console.log("页面加载完成");
         this.refreshBalance();
     },
 
@@ -19648,7 +19651,7 @@ var vm = new Vue({
             var _this = this;
 
             setInterval(function () {
-                _this.wallets = walletList.getWallets();
+                _this.wallets = walletList.getWallets(_this.isMainNet);
             }, 30000);
         },
 
@@ -19681,7 +19684,7 @@ var vm = new Vue({
             //添加地址
             if (ret == 'address') {
                 walletObj.address = this.newWallet.address;
-                walletObj.allassets = walletList.getUnspent(this.newWallet.address);
+                walletObj.allassets = walletList.getUnspent(this.newWallet.address, this.isMainNet);
                 if (walletList.addWallet(walletObj)) {
                     // let objShow = createShowObj('', walletObj.address, walletObj.allassets, '', false);
                     var objShow = new WalletObject('', walletObj.address, walletObj.allassets, '', false);
@@ -19699,7 +19702,7 @@ var vm = new Vue({
                     var password = this.newWallet.password;
                     var encryptData = wallet.encryptNeodunPrivateKey(privateKey, password);
                     var address = wallet.getAccountsFromPrivateKey(privateKey)[0].address;
-                    var allassets = walletList.getUnspent(address);
+                    var allassets = walletList.getUnspent(address, this.isMainNet);
                     walletObj.address = address;
                     walletObj.ciphertext = encryptData;
                     if (walletList.addWallet(walletObj)) {
@@ -40127,6 +40130,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var apiEndpoint = "http://testnet.antchain.xyz"; // this file contains high level API functions for connecting with network resources
 
 var rpcEndpoint = "https://api.otcgo.cn:20332"; // testnet = 20332
+
 
 // network name variables
 var MAINNET = exports.MAINNET = "MainNet";

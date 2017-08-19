@@ -6,6 +6,7 @@ import { getAccountsFromWIFKey, transferTransaction, signatureData, addContract 
 const apiEndpoint = "http://testnet.antchain.xyz";
 const rpcEndpoint = "https://api.otcgo.cn:20332"; // testnet = 20332
 
+
 // network name variables
 export const MAINNET = "MainNet";
 export const TESTNET = "TestNet";

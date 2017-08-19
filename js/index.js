@@ -14,6 +14,7 @@ import axios from 'axios';
 var chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const should = chai.should();
+let isMainNet = false;
 
 if (localStorage.wallets == undefined || localStorage.wallets == "[]" || localStorage.wallets == "") {
     localStorage.setItem("wallets", "[]");
@@ -100,9 +101,10 @@ class WalletList {
      * 获得未使用资产
      * @param {*地址} address 
      */
-    getUnspent($address) {
+    getUnspent($address, $isMainNet) {
         let unspent = new Array();
-        api.getBalance(api.TESTNET, $address).then((response) => {
+        console.log($isMainNet);
+        api.getBalance($isMainNet ? api.MAINNET : api.TESTNET, $address).then((response) => {
             unspent.push({ name: '小蚁股', balance: response.ANS });
             unspent.push({ name: '小蚁币', balance: response.ANC });
         });
@@ -111,7 +113,7 @@ class WalletList {
     /**
      * 获得钱包
      */
-    getWallets() {
+    getWallets(isMainNet) {
         let wallets = localStorage.wallets;
         let showWallets = new Array();
         if (wallets != undefined && wallets != '') {
@@ -122,7 +124,7 @@ class WalletList {
                     let address = arr[i].address;
                     let name = arr[i].name;
                     let ciphertext = arr[i].ciphertext;
-                    let allassets = this.getUnspent(address);
+                    let allassets = this.getUnspent(address, isMainNet);
                     let show = new WalletObject(name, address, allassets, ciphertext, ciphertext != undefined && ciphertext != '' ? true : false);
                     // let show = createShowObj(name, address, allassets, ciphertext, ciphertext != undefined && ciphertext != '' ? true : false);
                     showWallets.push(show);
@@ -176,7 +178,7 @@ var vm = new Vue({
             name: '',
             index: 0
         },
-        wallets: walletList.getWallets(),
+        wallets: walletList.getWallets(isMainNet),
         loginData: {
             walletIndex: 0,
             ciphertext: '',
@@ -212,16 +214,17 @@ var vm = new Vue({
                 message2: ''
             }
         },
+        isMainNet: false
     },
     mounted() {
-        console.log("页面加载完成");
+        // console.log("页面加载完成");
         this.refreshBalance();
     },
     methods: {
         //刷新余额
         refreshBalance() {
             setInterval(() => {
-                this.wallets = walletList.getWallets();
+                this.wallets = walletList.getWallets(this.isMainNet);
             }, 30000);
         },
         //展示操作
@@ -254,7 +257,7 @@ var vm = new Vue({
             //添加地址
             if (ret == 'address') {
                 walletObj.address = this.newWallet.address;
-                walletObj.allassets = walletList.getUnspent(this.newWallet.address);
+                walletObj.allassets = walletList.getUnspent(this.newWallet.address, this.isMainNet);
                 if (walletList.addWallet(walletObj)) {
                     // let objShow = createShowObj('', walletObj.address, walletObj.allassets, '', false);
                     let objShow = new WalletObject('', walletObj.address, walletObj.allassets, '', false);
@@ -272,7 +275,7 @@ var vm = new Vue({
                     let password = this.newWallet.password;
                     let encryptData = wallet.encryptNeodunPrivateKey(privateKey, password);
                     let address = wallet.getAccountsFromPrivateKey(privateKey)[0].address;
-                    let allassets = walletList.getUnspent(address);
+                    let allassets = walletList.getUnspent(address, this.isMainNet);
                     walletObj.address = address;
                     walletObj.ciphertext = encryptData;
                     if (walletList.addWallet(walletObj)) {
