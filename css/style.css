@@ -27,6 +27,11 @@ footer {
     /* user-select: none; */
 }
 
+input {
+    -webkit-user-select: auto;
+    /*webkit浏览器*/
+}
+
 .loading {
     width: 160px;
     height: 56px;
