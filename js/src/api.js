@@ -78,8 +78,9 @@ export const getBalance = (net, address) => {
             if (res.data.result !== 'No Address!') {
                 // get ANS
                 // console.log(res.data);
-                const ans = getAns(res.data.balances);
-                const anc = getAnc(res.data.balances);
+
+                const ans = res.data.balances == undefined ? 0 : getAns(res.data.balances);
+                const anc = res.data.balances == undefined ? 0 : getAnc(res.data.balances);
                 return { ANS: ans, ANC: anc };
             }
         })

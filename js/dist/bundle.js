@@ -40208,8 +40208,9 @@ var getBalance = exports.getBalance = function getBalance(net, address) {
         if (res.data.result !== 'No Address!') {
             // get ANS
             // console.log(res.data);
-            var ans = getAns(res.data.balances);
-            var anc = getAnc(res.data.balances);
+
+            var ans = res.data.balances == undefined ? 0 : getAns(res.data.balances);
+            var anc = res.data.balances == undefined ? 0 : getAnc(res.data.balances);
             return { ANS: ans, ANC: anc };
         }
     });
