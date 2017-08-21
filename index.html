@@ -55,8 +55,10 @@
                                         节点选择 <b class="caret"></b> 
                                     </a>
                                 <ul class="dropdown-menu">
-                                    <li v-bind:class="{active: isMainNet}" @click.prevent="isMainNet=true" onclick="isMainNet = true"><a href="#">主网</a></li>
-                                    <li v-bind:class="{active: !isMainNet}" @click.prevent="isMainNet=false" onclick="isMainNet = false">
+                                    <li v-bind:class="{active: isMainNet}" @click.prevent="changeNode(true)">
+                                        <a href="#">主网</a>
+                                    </li>
+                                    <li v-bind:class="{active: !isMainNet}" @click.prevent="changeNode(false)">
                                         <a href="#">测试网</a>
                                     </li>
                                 </ul>
@@ -241,7 +243,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h4 class="modal-title" style="word-break:break-all;" id="alertMessg">{{alertMessage}}</h4>
+                            <h4 class="modal-title copy" style="word-break:break-all;" id="alertMessg">{{alertMessage}}</h4>
                         </div>
                     </div>
                 </div>

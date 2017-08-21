@@ -227,6 +227,15 @@ var vm = new Vue({
                 this.wallets = walletList.getWallets(this.isMainNet);
             }, 30000);
         },
+        //切换节点
+        changeNode($isMainNet) {
+            this.isMainNet = $isMainNet;
+            isMainNet = $isMainNet;
+            let nodeName = $isMainNet ? '主网' : '测试';
+            this.alertMessage = '已切换' + nodeName + '网络节点';
+            this.wallets = walletList.getWallets(this.isMainNet);
+            $('#alert').modal('show');
+        },
         //展示操作
         showAction($index) {
             var index = "" + $index;

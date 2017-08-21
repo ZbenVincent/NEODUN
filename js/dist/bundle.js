@@ -19655,6 +19655,16 @@ var vm = new Vue({
             }, 30000);
         },
 
+        //切换节点
+        changeNode: function changeNode($isMainNet) {
+            this.isMainNet = $isMainNet;
+            isMainNet = $isMainNet;
+            var nodeName = $isMainNet ? '主网' : '测试';
+            this.alertMessage = '已切换' + nodeName + '网络节点';
+            this.wallets = walletList.getWallets(this.isMainNet);
+            $('#alert').modal('show');
+        },
+
         //展示操作
         showAction: function showAction($index) {
             var index = "" + $index;
