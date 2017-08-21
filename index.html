@@ -69,7 +69,7 @@
                 <!--/.nav-collapse -->
             </nav>
 
-            <div class="panel-group" id="accordion">
+            <div v-if="page==0" class="panel-group" id="accordion">
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <h4 class="panel-title">
@@ -120,6 +120,22 @@
                             待开发
                         </div>
                     </div>
+                </div>
+            </div>
+            <div v-if="page==1" class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">行情</h3>
+                </div>
+                <div class="panel-body">
+                    待开发
+                </div>
+            </div>
+            <div v-if="page==2" class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">开发者</h3>
+                </div>
+                <div class="panel-body">
+                    待开发
                 </div>
             </div>
 
@@ -336,12 +352,12 @@
             <!-- /.modal -->
             <footer>
                 <ul class="nav nav-pills navbar-fixed-bottom">
-                    <li class="active">
+                    <li class="active" @click.prevent="page=0">
                         <img class="btn btn-primary" src="img/wallet.png" height="40" width="50">
                     </li>
-                    <li><img src="img/market.png" class="btn btn-primary" height="40" width="50">
+                    <li><img src="img/market.png" @click.prevent="page=1" class="btn btn-primary" height="40" width="50">
                     </li>
-                    <li><img src="img/developer.png" class="btn btn-primary" height="40" width="50">
+                    <li><img src="img/developer.png" @click.prevent="page=2" class="btn btn-primary" height="40" width="50">
                     </li>
                 </ul>
             </footer>

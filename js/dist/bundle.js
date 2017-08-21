@@ -19587,6 +19587,7 @@ var walletList = new WalletList();
 var vm = new Vue({
     el: '#app',
     data: {
+        page: 0,
         newWallet: {
             id: '',
             name: '',
