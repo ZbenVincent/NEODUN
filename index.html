@@ -224,12 +224,12 @@
                                     <p class="prompt">{{reminderControl.isBusiness.message2}}</p>
                                 </div>
                             </div>
-                            <!-- <div v-if="expression" class="checkbox">
-                                <label><input type="checkbox" value="">记住地址</label>
+                            <div v-if="businessMessage.isNewAddress==1||businessMessage.isNewAddress==2" class="checkbox">
+                                <label><input type="checkbox" value="1" @change="businessMessage.isNewAddress = businessMessage.isNewAddress==1?2:1">记住新地址</label>
                             </div>
-                            <div v-if="expression">
+                            <div v-if="businessMessage.isNewAddress==2">
                                 <label>昵称</label><input type="text" class="form-control" name="" id="">
-                            </div> -->
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-info" data-toggle="modal" @click="business()" data-target="#saveWallet">确认</button>

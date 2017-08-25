@@ -192,7 +192,8 @@ var vm = new Vue({
             amount: 0,
             publickeyEncoded: '',
             privatekey: '',
-            account: {}
+            account: {},
+            isNewAddress: 0
         },
         showAddress: 'false',
         showManipulate: 'false',
@@ -215,7 +216,8 @@ var vm = new Vue({
                 message2: ''
             }
         },
-        isMainNet: false
+        isMainNet: false,
+
     },
     mounted() {
         // console.log("页面加载完成");
@@ -408,7 +410,8 @@ var vm = new Vue({
                 amount: 0,
                 publickeyEncoded: '',
                 privatekey: '',
-                account: {}
+                account: {},
+                isNewAddress: 0
             }
         },
         //验证与提醒
@@ -489,6 +492,9 @@ var vm = new Vue({
                     // return 'err-format'
                 } else {
                     this.reminderControl.isBusiness.isToAddressErr = false;
+                    if (!walletList.findAddress(busData.toAddress)) {
+                        this.businessMessage.isNewAddress = 1;
+                    }
                     // verifyResult = 'err-format';
                 };
                 //校验金额
@@ -531,7 +537,8 @@ var vm = new Vue({
                     amount: 0,
                     publickeyEncoded: '',
                     privatekey: '',
-                    account: {}
+                    account: {},
+                    isNewAddress: 0
                 };
                 this.reminderControl.isBusiness.isToAddressErr = false;
                 this.reminderControl.isBusiness.isAmountErr = false;
